@@ -1,54 +1,67 @@
-"use client"
-import Image from 'next/image'
-import {useState, useEffect} from 'react'
+"use client";
+import Image from 'next/image';
+import { useState, useEffect } from 'react';
 
 export default function Home() {
+  const [todos, setTodos] = useState({ title: "", desc: "" });
+  const [currentTodos, setCurrentTodos] = useState([]);
+  const [help, setHelp] = useState("Help from OpenAI will appear here");
 
-  const [todos, settodos] = useState({title:"", desc: ""})
-  const [currentTodos, setCurrentTodos] = useState([])
-  const [help, sethelp] = useState("Help from OpenAI will appear here")
   useEffect(() => {
-    const getData = async()=> {
-    let a = await fetch("/api")
-    let b = await a.json()
-    console.log(b.rows)
-    setCurrentTodos(b.rows)
-    }
-    getData()
-   }, [])
-   
-  
-  const handleChange = (e) =>{
-    settodos({...todos, [e.target.name]: e.target.value})
-  }
+    const getData = async () => {
+      try {
+        const response = await fetch("/api");
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json();
+        setCurrentTodos(data.rows);
+      } catch (error) {
+        console.error('Error fetching todos:', error);
+      }
+    };
+    getData();
+  }, []);
+
+  const handleChange = (e) => {
+    setTodos({ ...todos, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
-    console.log(todos)
-    let a = await fetch("/api", {
-    body: JSON.stringify(todos),
-      method: "POST", 
-    headers: {
-      "Content-Type": "application/json",
-    }})
-    let response = await a.json()
-    console.log(response)
-
-    settodos({title: "", desc: ""})
-  }
-
-    const getHelp = async(todo)=>{
-      sethelp("Loading..")
-      let a = await fetch("/api/open", {
-        body: JSON.stringify({todo : todo}),
+    e.preventDefault(); // Prevent default form submission behavior
+    try {
+      const response = await fetch("/api", {
+        body: JSON.stringify(todos),
         method: "POST",
         headers: {
-          "Content-Type": "application/json ",
-        }
-      })
-      let response = await a.json()
-      console.log(response)
-      sethelp(response.text)
-  }
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) throw new Error('Network response was not ok');
+      const result = await response.json();
+      console.log(result);
+      setTodos({ title: "", desc: "" });
+    } catch (error) {
+      console.error('Error submitting todo:', error);
+    }
+  };
+
+  const getHelp = async (todo) => {
+    setHelp("Loading...");
+    try {
+      const response = await fetch("/api/open", {
+        body: JSON.stringify({ todo: todo }),
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) throw new Error('Network response was not ok');
+      const result = await response.json();
+      setHelp(result.text);
+    } catch (error) {
+      console.error('Error fetching help:', error);
+      setHelp("Error retrieving help.");
+    }
+  };
 
   return (
     <div>
@@ -77,17 +90,17 @@ export default function Home() {
               <div className="p-2 w-full">
                 <div className="relative">
                   <label htmlFor="title" className="leading-7 text-sm text-gray-600">Todo Title</label>
-                  <input onChange = {handleChange} type="text" id="title" value = {todos.title} name="title" className="w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out" />
+                  <input onChange={handleChange} type="text" id="title" value={todos.title} name="title" className="w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out" />
                 </div>
               </div>
               <div className="p-2 w-full">
                 <div className="relative">
                   <label htmlFor="desc" className="leading-7 text-sm text-gray-600">Todo Description</label>
-                  <textarea onChange = {handleChange} id="desc" name="desc" className="w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-200 h-32 text-base outline-none text-gray-700 py-1 px-3 resize-none leading-6 transition-colors duration-200 ease-in-out" value = {todos.desc}></textarea>
+                  <textarea onChange={handleChange} id="desc" name="desc" className="w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-200 h-32 text-base outline-none text-gray-700 py-1 px-3 resize-none leading-6 transition-colors duration-200 ease-in-out" value={todos.desc}></textarea>
                 </div>
               </div>
               <div className="p-2 w-full">
-                <button onClick = {handleSubmit} className="flex mx-auto text-white bg-indigo-500 border-0 py-2 px-8 focus:outline-none hover:bg-indigo-600 rounded text-lg">Add Todo List</button>
+                <button onClick={handleSubmit} className="flex mx-auto text-white bg-indigo-500 border-0 py-2 px-8 focus:outline-none hover:bg-indigo-600 rounded text-lg">Add Todo List</button>
               </div>
               <div className="p-2 w-full pt-8 mt-8 border-t border-gray-200 text-center">
                 <a className="text-indigo-500">ShyamDhanvi@gmail.com</a>
@@ -122,23 +135,23 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <div className = "container px-5 py-12 mx-auto">
-      <section>
-        <h1 className = 'text-2xl font-bold my-5'>Your Todos</h1>
-        {currentTodos.map((items)=>{
-          return <p>
-            {items[0]}: {items[1]}
-            <button className="mx-4 my-3 text-white bg-indigo-500 border-0 py-2 px-8 focus:outline-none hover:bg-indigo-600 rounded text-lg" onClick= {() =>{getHelp(items[0])}}>Get AI Help</button>
-          </p>
-        })}
-      </section>
+      <div className="container px-5 py-12 mx-auto">
+        <section>
+          <h1 className='text-2xl font-bold my-5'>Your Todos</h1>
+          {currentTodos.map((items, index) => (
+            <p key={index}>
+              {items[0]}: {items[1]}
+              <button className="mx-4 my-3 text-white bg-indigo-500 border-0 py-2 px-8 focus:outline-none hover:bg-indigo-600 rounded text-lg" onClick={() => { getHelp(items[0]) }}>Get AI Help</button>
+            </p>
+          ))}
+        </section>
       </div>
-      <div className = "container px-5 py-12 mx-auto">
-      <section>
-        <h1 className = 'sm:text-3xl text-2xl font-medium title-font mb-4 text-gray-900'>HelpFromOpenAI</h1>
-         <p>{help}</p>
-      </section>
+      <div className="container px-5 py-12 mx-auto">
+        <section>
+          <h1 className='sm:text-3xl text-2xl font-medium title-font mb-4 text-gray-900'>HelpFromOpenAI</h1>
+          <p>{help}</p>
+        </section>
       </div>
     </div>
-  )
+  );
 }

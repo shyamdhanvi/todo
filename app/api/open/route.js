@@ -1,7 +1,11 @@
 import OpenAI from 'openai';
 import { NextResponse } from 'next/server';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 const openai = new OpenAI({
-  apiKey: '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', // defaults to process.env["OPENAI_API_KEY"]
+  apiKey: process.env.OPENAI_API_KEY, // Access the API key from the environment variables
 });
 
 async function main(todo) {
