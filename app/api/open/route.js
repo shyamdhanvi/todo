@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, // Access the API key from the environment variables
+  apiKey: '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', // defaults to process.env["OPENAI_API_KEY"]
 });
 
 async function main(todo) {
